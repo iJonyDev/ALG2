@@ -17,6 +17,9 @@ public class EPD1EJ2 {
     private static int[] enfriamientoSimulado() {
         int[] solActual = {0, 0, 0, 0, 0};  // Inicialización de la solucion actual
         int[] solMejor = {0, 0, 0, 0, 0};   // solMejor igual a la solución actual, inicialmente
+        int[] peso = {10,30,50,90,60};      // Pesos de los objetos
+        int[] beneficio = {100,200,300,400,500};    // Beneficios de los objetos
+        int[] solVecino;
         int[][] vecinos = new int[NUM_VECINOS][NUM_BITS]; // Matriz bidimensional para almacenar los vecinos
 
         double costeActual = calcularCoste(solActual);
