@@ -25,7 +25,9 @@ public class SA_p3_1 {
         int[][] afinidades = generarAfinidadesAleatorias(NUM_COMPONENTES, NUM_VALORES);
         int[][] costes = calcularCostes(valores, afinidades);
         int[] solucion = enfriamientoSimulado(valores, afinidades, costes);
-        System.out.println("\n\nLa mejor combinación encontrada es: " + Arrays.toString(solucion) + ", con afinidad total: " + calcularAfinidad(solucion, afinidades) + " y coste total: " + calcularCoste(solucion, costes));
+        System.out.println("\n\nLa mejor combinación encontrada es: " + Arrays.toString(solucion) 
+                            + ", con afinidad total: " + calcularAfinidad(solucion, afinidades) 
+                            + " y coste total: " + calcularCoste(solucion, costes));
     }
 
     private static int[] enfriamientoSimulado(int[][] valores, int[][] afinidades, int[][] costes) {
