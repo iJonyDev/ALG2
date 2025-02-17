@@ -1,0 +1,117 @@
+package EPD1;
+
+/*\
+Queremos resolver el problema de la mochila utilizando SA. 
+Para ello, suponga que la capacidad de la mochila es MAX_PESO = 180 y que puede insertar hasta 100 elementos, con pesos
+aleatorios comprendidos entre [1, 100], esto es, considere el siguiente vector P = {p1, p2, ..., p100}, con pi = [1,100]. 
+Se permite que dos elementos pesen lo mismo.
+¿Qué codificación escogería para modelar el problema?
+¿Qué temperatura inicial pondría?
+¿Cuántas combinaciones reales existen?
+Considere T_INICIAL = 200 y T_FINAL = 5. */
+
+import java.util.Arrays;
+import java.util.Random;
+
+public class SA_ej2_1 {
+
+    public static final int NUM_VECINOS = 5;
+    public static final int NUM_BITS = 5;
+    public static final int T_FINAL = 5;
+    public static final int T_INICIAL = 200;
+    public static final int MAX_PESO = 180;
+    public static final int[] PESOS = new int[NUM_BITS];
+
+    public static void main(String[] args) {
+        Random rand = new Random();
+        for (int i = 0; i < NUM_BITS; i++) {
+            PESOS[i] = rand.nextInt(100) + 1;
+        }
+        System.out.println("Pesos de los elementos: " + Arrays.toString(PESOS));
+        int[] solucion = enfriamientoSimulado();
+        System.out.println("\n\nEl valor máximo encontrado es x=" + binaryToDecimal(solucion) + ", siendo f(x)=" + calcularCoste(solucion));
+    }
+
+    private static int[] enfriamientoSimulado() {
+        int[] solActual = {0,0,0,0,0};
+        int[] solMejor = {0,0,0,0,0};
+        int[][] vecinos;
+
+        double costeActual = calcularCoste(solActual);
+        double costeMejor = costeActual;
+        double costeVecino;
+        double delta;
+
+        double temperatura = T_INICIAL;
+        int exitos = -1;
+        int i;
+
+        while (temperatura >= T_FINAL && exitos != 0) {
+            exitos = 0;
+            System.out.println("\n*************************\nLa solucion actual para esta iteracion es: " + binaryToDecimal(solActual) + " \n");
+            vecinos = generarVecinos(solActual);
+            for (i = 0; i < NUM_VECINOS; i++) {
+                costeVecino = calcularCoste(vecinos[i]);
+                delta = costeVecino - costeActual;
+
+                if (delta > 0 || probAceptacion(delta, temperatura)) {
+                    exitos++;
+                    solActual = Arrays.copyOf(vecinos[i], vecinos[i].length);
+                    costeActual = costeVecino;
+
+                    if (costeVecino > costeMejor) {
+                        solMejor = Arrays.copyOf(vecinos[i], vecinos[i].length);
+                        costeMejor = costeVecino;
+                    }
+                }
+            }
+            System.out.println("\nsolMejor tras la iteracion: " + binaryToDecimal(solMejor) + "\n");
+            temperatura *= 0.9;
+        }
+        if (exitos == 0) {
+            System.out.println("\nSe termina el proceso de búsqueda por no haber mejores vecinos");
+        } else {
+            System.out.println("\nSe termina el proceso de búsqueda por enfriarse el proceso");
+        }
+        return solMejor;
+    }
+
+    private static int[] generarVecino(int[] solucion, int bit) {
+        int[] vecino = Arrays.copyOf(solucion, solucion.length);
+        vecino[bit] = 1 - vecino[bit];
+        return vecino;
+    }
+
+    private static int[][] generarVecinos(int[] solucion) {
+        int[][] vecinos = new int[NUM_VECINOS][NUM_BITS];
+        for (int i = 0; i < NUM_VECINOS; i++) {
+            vecinos[i] = generarVecino(solucion, i);
+        }
+        return vecinos;
+    }
+
+    private static double calcularCoste(int[] array) {
+        int pesoTotal = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == 1) {
+                pesoTotal += PESOS[i];
+            }
+        }
+        if (pesoTotal > MAX_PESO) {
+            return 0; // Penalización por exceder el peso máximo
+        }
+        return pesoTotal;
+    }
+
+    private static boolean probAceptacion(double delta, double temperatura) {
+        return (Math.exp(delta / temperatura) > Math.random());
+    }
+
+    private static int binaryToDecimal(int[] array) {
+        int n = 0;
+        for (int i = 0; i < array.length; i++) {
+            n += array[i] << i;
+        }
+        return n;
+    }
+}
