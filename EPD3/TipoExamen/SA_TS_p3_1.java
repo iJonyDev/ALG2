@@ -8,48 +8,56 @@ supere un umbral MAX_COSTE.
 Para poder comprobar que la metaheurística diseñada funciona, suponga que N = M = 4. Los valores aij y vij
 estarán comprendidos entre [1, 10] y, por tanto, cij entre [1, 100]. Por último, UMBRAL_COSTE < 200. 
 */
-package EPD2;
+package EPD3.TipoExamen;
+
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
-public class TS_p3_1 {
-    public static final int NUM_VECINOS = 10;
+public class SA_TS_p3_1 {
     public static final int NUM_COMPONENTES = 4;
     public static final int NUM_VALORES = 4;
+    public static final int NUM_VECINOS = 10;
     public static final int TENENCIA_TABU = 4;
     public static final int MAX_ITERACIONES = 10;
     public static final int UMBRAL_COSTE = 200;
+    public static final int T_FINAL = 1;
+    public static final int T_INICIAL = 100;
 
     public static void main(String[] args) {
         int[][] valores = generarMatrizAleatoria(NUM_COMPONENTES, NUM_VALORES);
         int[][] afinidades = generarMatrizAleatoria(NUM_COMPONENTES, NUM_VALORES);
         int[][] costes = calcularCostes(valores, afinidades);
-        int[] solucion = tabuSearch(valores, afinidades, costes);
-        System.out.println("\n\nLa mejor combinación encontrada es: " + Arrays.toString(solucion) + ", con afinidad total: " + calcularAfinidadTotal(solucion, afinidades) + " y coste total: " + calcularCosteTotal(solucion, costes));
+
+        int[] solucionTabu = tabuSearch(afinidades, costes);
+        System.out.println("\n\nLa mejor combinación encontrada por Tabu Search es: " + Arrays.toString(solucionTabu) 
+                            + ", con afinidad total: " + calcularTotal(solucionTabu, afinidades) 
+                            + " y coste total: " + calcularTotal(solucionTabu, costes));
+
+        int[] solucionSA = enfriamientoSimulado(afinidades, costes);
+        System.out.println("\n\nLa mejor combinación encontrada por Enfriamiento Simulado es: " + Arrays.toString(solucionSA) 
+                            + ", con afinidad total: " + calcularTotal(solucionSA, afinidades) 
+                            + " y coste total: " + calcularTotal(solucionSA, costes));
     }
 
-    private static int[] tabuSearch(int[][] valores, int[][] afinidades, int[][] costes) {
+    private static int[] tabuSearch(int[][] afinidades, int[][] costes) {
         int[] solActual = generarSolucionInicial();
-        while (calcularCosteTotal(solActual, costes) > UMBRAL_COSTE) solActual = generarSolucionInicial();
-        int[] solMejor = Arrays.copyOf(solActual, solActual.length);
-        double afinidadActual = calcularAfinidadTotal(solActual, afinidades), afinidadMejor = afinidadActual;
+        while (calcularTotal(solActual, costes) > UMBRAL_COSTE) solActual = generarSolucionInicial();
+        int[] solMejor = solActual;
+        double afinidadActual = calcularTotal(solActual, afinidades), afinidadMejor = afinidadActual;
         Queue<int[]> listaTabu = new LinkedList<>();
-        listaTabu.add(solActual);
         int iteraciones = 0;
 
         while (iteraciones++ < MAX_ITERACIONES) {
-            System.out.println("\n*************************\nLa solucion actual para esta iteracion es: " + Arrays.toString(solActual) + " \n");
             int[][] vecinos = generarVecinos(solActual);
             int[] mejorVecino = null;
             double mejorAfinidadVecino = -1;
 
             for (int i = 0; i < vecinos.length; i++) {
-                double costeVecino = calcularCosteTotal(vecinos[i], costes);
-                double afinidadVecino = calcularAfinidadTotal(vecinos[i], afinidades);
-                System.out.println("\nVecino " + i + ", coste = " + costeVecino);
-                if (!listaTabu.contains(vecinos[i]) && afinidadVecino > mejorAfinidadVecino && costeVecino <= UMBRAL_COSTE) {
+                double costeVecino = calcularTotal(vecinos[i], costes);
+                double afinidadVecino = calcularTotal(vecinos[i], afinidades);
+                if (!listaTabu.contains(vecinos[i]) && afinidadVecino > mejorAfinidadVecino && costeVecino <= UMBRAL_COSTE ) {
                         mejorAfinidadVecino = afinidadVecino;
                         mejorVecino = vecinos[i];
                 }
@@ -61,11 +69,39 @@ public class TS_p3_1 {
                 if (afinidadActual > afinidadMejor) {
                     solMejor = Arrays.copyOf(solActual, solActual.length);
                     afinidadMejor = afinidadActual;
-                    System.out.println("\nSolucion mejor global actualizada en iteracion = " + iteraciones);
                 }
                 listaTabu.add(solActual);
                 if (listaTabu.size() > TENENCIA_TABU) listaTabu.poll();
             }
+        }
+        return solMejor;
+    }
+
+    private static int[] enfriamientoSimulado(int[][] afinidades, int[][] costes){
+        int[] solActual = generarSolucionInicial();
+        while (calcularTotal(solActual, costes) > UMBRAL_COSTE) solActual = generarSolucionInicial();
+        int[] solMejor = solActual;
+        double afinidadActual = calcularTotal(solActual, afinidades), afinidadMejor = afinidadActual, temperatura = T_INICIAL, delta;
+        int exitos = -1;
+
+        while (temperatura >= T_FINAL && exitos != 0 ) {
+            exitos = 0;
+            int[][] vecinos = generarVecinos(solActual);
+            for (int i = 0; i < vecinos.length; i++) {
+                double costeVecino = calcularTotal(vecinos[i], costes);
+                double afinidadVecino = calcularTotal(vecinos[i], afinidades);
+                delta = afinidadVecino - afinidadActual;
+                if (costeVecino <= UMBRAL_COSTE && (delta > 0 || probAceptacion(delta, temperatura))) {
+                    exitos++;
+                    solActual = Arrays.copyOf(vecinos[i], vecinos[i].length);
+                    afinidadActual = afinidadVecino;
+                    if (afinidadActual > afinidadMejor) {
+                        solMejor = Arrays.copyOf(vecinos[i], vecinos[i].length);
+                        afinidadMejor = afinidadVecino;
+                    }
+                }
+            }
+            temperatura *= 0.9;
         }
         return solMejor;
     }
@@ -101,18 +137,11 @@ public class TS_p3_1 {
         return matriz;
     }
 
-    private static double calcularAfinidadTotal(int[] solucion, int[][] afinidades) {
-        double afinidadTotal = 0;
+    private static double calcularTotal(int[] solucion, int[][] matriz) {
+        double total = 0;
         for (int i = 0; i < solucion.length; i++) 
-            afinidadTotal += afinidades[i][solucion[i]];
-        return afinidadTotal;
-    }
-
-    private static double calcularCosteTotal(int[] solucion, int[][] costes) {
-        double costeTotal = 0;
-        for (int i = 0; i < solucion.length; i++) 
-            costeTotal += costes[i][solucion[i]];
-        return costeTotal;
+            total += matriz[i][solucion[i]];
+        return total;
     }
 
     private static int[][] calcularCostes(int[][] valores, int[][] afinidades) {
@@ -121,5 +150,9 @@ public class TS_p3_1 {
             for (int j = 0; j < valores[i].length; j++) 
                 costes[i][j] = valores[i][j] * afinidades[i][j];
         return costes;
+    }
+
+    private static boolean probAceptacion(double delta, double temperatura){
+        return (Math.exp(delta/temperatura) > Math.random());
     }
 }

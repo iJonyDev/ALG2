@@ -8,30 +8,21 @@ public class SA_p1_2 {
     public static final int NUM_MATERIALES = 7;
     public static final int T_FINAL = 1;
     public static final int T_INICIAL = 100;
-
+    private static final int[] MATERIALES = {1, 2, 3, 4, 5, 6, 7};
     public static void main(String[] args) {
         int[] solucion = enfriamientoSimulado();
         System.out.println("\n\nMejor orden encontrado es: " + Arrays.toString(solucion) + ",con calida aislante: " + calcularCoste(solucion));
     }
 
     private static int[] enfriamientoSimulado(){
-        int[] solActual = {1, 2, 3, 4, 5, 6, 7};
-        int[] solMejor = Arrays.copyOf(solActual, solActual.length);
-        int[][] vecinos;
-
-        double costeActual = calcularCoste(solActual);
-        double costeMejor = costeActual;
-        double costeVecino;
-        double delta;
-
-        double temperatura = T_INICIAL;
+        int[] solActual = MATERIALES, solMejor = solActual;
+        double costeActual = calcularCoste(solActual), costeMejor = costeActual, costeVecino, delta, temperatura = T_INICIAL;
         int exitos = -1;
-        int i;
         while(temperatura >= T_FINAL && exitos != 0){
             exitos = 0;
             System.out.println("\n*******************\nSolucion actual para esta iteracion" + Arrays.toString(solActual) + "\n");
-            vecinos = generarVecinos(solActual);
-            for(i = 0; i < NUM_VECINOS ; i++){
+            int[][] vecinos = generarVecinos(solActual);
+            for(int i = 0; i < NUM_VECINOS ; i++){
                 costeVecino = calcularCoste(vecinos[i]);
                 delta = costeVecino - costeActual;
                 if(delta > 0 || probAceptacion(delta, temperatura)){

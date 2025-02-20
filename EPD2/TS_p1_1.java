@@ -1,4 +1,3 @@
-package EPD2;
 /*
 Se desea fabricar un material aislante compuesto por siete materiales distintos. 
 Se desea encontrar cuál es el orden en que deben mezclarse dichos materiales para asegurar que sea lo más aislante
@@ -21,6 +20,7 @@ entonces, la nueva solución candidata sería [5, 2, 7, 1, 4, 6, 3], siendo su c
 aceptaría. De esta condición se deduce que el máximo se alcanzará cuando tengamos en las tres posiciones
 superiores {5, 6, 7}, en cualquier orden posible o, en otras palabras, que el máximo global sería 5+6+7 = 18.
 */
+package EPD2;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -41,52 +41,39 @@ public class TS_p1_1 {
     }
 
     private static int[] tabuSearch() {
-        int[] solActual = Arrays.copyOf(MATERIALES, MATERIALES.length);
-        int[] solMejor = Arrays.copyOf(MATERIALES, MATERIALES.length);
-        int[][] vecinos;
+        int[] solActual = MATERIALES , solMejor = solActual;
         Queue<int[]> listaTabu = new LinkedList<>();
-
-        double costeActual = calcularCoste(solActual);
-        double costeMejor = costeActual;
-        double costeVecino;
+        double costeActual = calcularCoste(solActual), costeMejor = costeActual;
         int iteraciones = 0;
-
-        while (iteraciones < MAX_ITERACIONES) {
-            System.out.println("\n\n************** Iteracion " + (iteraciones + 1));
-            vecinos = generarVecinos(solActual);
+    
+        while (iteraciones++ < MAX_ITERACIONES) {
+            System.out.println("\n************* \nIteracion " + (iteraciones + 1));
+            int[][] vecinos = generarVecinos(solActual);
             int[] mejorVecino = null;
             double mejorCosteVecino = -1;
-
-            for (int i = 0; i < NUM_VECINOS; i++) {
-                System.out.println("\nVecino " + i + " generado: calidad aislante=" + calcularCoste(vecinos[i]));
-                if (!listaTabu.contains(vecinos[i])) {
-                    costeVecino = calcularCoste(vecinos[i]);
-                    if (costeVecino > mejorCosteVecino) {
-                        mejorVecino = vecinos[i];
-                        mejorCosteVecino = costeVecino;
-                    }
+    
+            for (int i = 0; i < vecinos.length; i++) {
+                double costeVecino = calcularCoste(vecinos[i]);
+                System.out.println("\nVecino " + i + ", beneficio = " + costeVecino);
+                if (!listaTabu.contains(vecinos[i]) && costeVecino > mejorCosteVecino) {
+                    mejorVecino = vecinos[i];
+                    mejorCosteVecino = costeVecino;
                 }
             }
-
+    
             if (mejorVecino != null) {
                 solActual = Arrays.copyOf(mejorVecino, mejorVecino.length);
                 costeActual = mejorCosteVecino;
-
                 if (costeActual > costeMejor) {
                     solMejor = Arrays.copyOf(solActual, solActual.length);
                     costeMejor = costeActual;
-                    System.out.println("\nSolucion mejor global actualizada en iteracion = " + (iteraciones + 1));
-                }
-
-                listaTabu.add(solActual);
-                if (listaTabu.size() > TENENCIA_TABU) {
-                    listaTabu.poll();
+                    System.out.println("\nSolucion mejor global actualizada en iteracion: " + iteraciones);
                 }
             }
-
-            iteraciones++;
+    
+            listaTabu.add(solActual);
+            if (listaTabu.size() > TENENCIA_TABU) listaTabu.poll();
         }
-
         return solMejor;
     }
 

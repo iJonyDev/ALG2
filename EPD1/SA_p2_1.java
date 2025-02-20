@@ -1,4 +1,3 @@
-package EPD1;
 /*
 Se dispone de un conjunto de n procesos y un ordenador con m procesadores (de
 características no necesariamente iguales). Se conoce el tiempo que requiere el procesador j-ésimo para
@@ -6,6 +5,7 @@ realizar el proceso i-ésimo, tij. Se desea encontrar un reparto de procesos ent
 tiempo de finalización sea lo más corto posible. Tome tantas decisiones como estime conveniente e intente
 comparar distintas soluciones con distintas configuraciones iniciales. 
 */
+package EPD1;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -15,15 +15,16 @@ public class SA_p2_1 {
     public static final int T_FINAL = 1;
     public static final int T_INICIAL = 100;
 
-    private static final int[][] TIEMPOS = {
-        {2, 3, 1},
-        {4, 2, 3},
-        {3, 1, 2},
-        {5, 4, 3},
-        {2, 3, 4},
-        {3, 2, 1},
-        {4, 3, 2}
-    };
+    private static final int[][] TIEMPOS = new int[NUM_PROCESOS][NUM_PROCESADORES];
+
+    static {
+        Random rand = new Random();
+        for (int i = 0; i < NUM_PROCESOS; i++) {
+            for (int j = 0; j < NUM_PROCESADORES; j++) {
+                TIEMPOS[i][j] = rand.nextInt(10) + 1;
+            }
+        }
+    }
 
     public static void main(String[] args) {
         int[] solucion = enfriamientoSimulado();
@@ -31,32 +32,21 @@ public class SA_p2_1 {
     }
 
     private static int[] enfriamientoSimulado() {
-        int[] solActual = generarSolucionInicial();
-        int[] solMejor = Arrays.copyOf(solActual, solActual.length);
-        int[][] vecinos;
-
-        double costeActual = calcularCoste(solActual);
-        double costeMejor = costeActual;
-        double costeVecino;
-        double delta;
-
-        double temperatura = T_INICIAL;
+        int[] solActual = generarSolucionInicial(), solMejor = solActual;
+        double costeActual = calcularCoste(solActual), costeMejor = costeActual, costeVecino, delta, temperatura = T_INICIAL;
         int exitos = -1;
-        int i;
 
         while (temperatura >= T_FINAL && exitos != 0) {
             exitos = 0;
             System.out.println("\n*************************\nLa solucion actual para esta iteracion es: " + Arrays.toString(solActual) + " \n");
-            vecinos = generarVecinos(solActual);
-            for (i = 0; i < vecinos.length; i++) {
+            int[][] vecinos = generarVecinos(solActual);
+            for (int i = 0; i < vecinos.length; i++) {
                 costeVecino = calcularCoste(vecinos[i]);
                 delta = costeVecino - costeActual;
-
                 if (delta < 0 || probAceptacion(delta, temperatura)) {
                     exitos++;
                     solActual = Arrays.copyOf(vecinos[i], vecinos[i].length);
                     costeActual = costeVecino;
-
                     if (costeVecino < costeMejor) {
                         solMejor = Arrays.copyOf(vecinos[i], vecinos[i].length);
                         costeMejor = costeVecino;

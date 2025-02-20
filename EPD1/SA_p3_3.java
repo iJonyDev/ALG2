@@ -3,7 +3,7 @@ package EPD1;
 import java.util.Arrays;
 import java.util.Random;
 
-public class SA_p3_2 {
+public class SA_p3_3 {
     public static final int NUM_COMPONENTES = 4;
     public static final int NUM_VALORES = 4;
     public static final int T_FINAL = 1;

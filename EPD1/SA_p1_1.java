@@ -1,4 +1,3 @@
-package EPD1;
 /*Se desea fabricar un material aislante compuesto por siete materiales distintos. Se desea
 encontrar cuál es el orden en que deben mezclarse dichos materiales para asegurar que sea lo más aislante
 posible. Suponga la siguiente situación:
@@ -19,48 +18,38 @@ entonces, la nueva solución candidata sería [5, 2, 7, 1, 4, 6, 3], siendo su c
 aceptaría. De esta condición se deduce que el máximo se alcanzará cuando tengamos en las tres posiciones
 superiores {5, 6, 7}, en cualquier orden posible o, en otras palabras, que el máximo global sería 5+6+7 = 18.
 */
+package EPD1;
+
 import java.util.Arrays;
 
 public class SA_p1_1 {
-    //Número de combinaciones posibles de intercambio de 7 elementos tomados de 2 en 2.
-    public static final int NUM_VECINOS = 21; // 7 * (7 - 1) / 2
+    // Numero de combinaciones posibles de intercambio de 7 elementos tomados de 2 en 2. 
+    public static final int NUM_VECINOS = 21;
     public static final int NUM_MATERIALES = 7;
     public static final int T_FINAL = 1;
     public static final int T_INICIAL = 100;
-
+    private static final int[] MATERIALES = {1, 2, 3, 4, 5, 6, 7};
     public static void main(String[] args) {
         int[] solucion = enfriamientoSimulado();
-        System.out.println("\n\nEl mejor orden encontrado es: " + Arrays.toString(solucion) + ", con calidad aislante: " + calcularCoste(solucion));
+        System.out.println("\n\nMejor orden encontrado es: " + Arrays.toString(solucion) + ",con calida aislante: " + calcularCoste(solucion));
     }
 
-    private static int[] enfriamientoSimulado() {
-        int[] solActual = {1, 2, 3, 4, 5, 6, 7};
-        int[] solMejor = Arrays.copyOf(solActual, solActual.length);
-        int[][] vecinos;
-
-        double costeActual = calcularCoste(solActual);
-        double costeMejor = costeActual;
-        double costeVecino;
-        double delta;
-
-        double temperatura = T_INICIAL;
+    private static int[] enfriamientoSimulado(){
+        int[] solActual = MATERIALES, solMejor = solActual;
+        double costeActual = calcularCoste(solActual), costeMejor = costeActual, costeVecino, delta, temperatura = T_INICIAL;
         int exitos = -1;
-        int i;
-
-        while (temperatura >= T_FINAL && exitos != 0) {
+        while(temperatura >= T_FINAL && exitos != 0){
             exitos = 0;
-            System.out.println("\n*************************\nLa solucion actual para esta iteracion es: " + Arrays.toString(solActual) + " \n");
-            vecinos = generarVecinos(solActual);
-            for (i = 0; i < NUM_VECINOS; i++) {
+            System.out.println("\n*******************\nSolucion actual para esta iteracion" + Arrays.toString(solActual) + "\n");
+            int[][] vecinos = generarVecinos(solActual);
+            for(int i = 0; i < NUM_VECINOS ; i++){
                 costeVecino = calcularCoste(vecinos[i]);
                 delta = costeVecino - costeActual;
-
-                if (delta > 0 || probAceptacion(delta, temperatura)) {
+                if(delta > 0 || probAceptacion(delta, temperatura)){
                     exitos++;
                     solActual = Arrays.copyOf(vecinos[i], vecinos[i].length);
                     costeActual = costeVecino;
-
-                    if (costeVecino > costeMejor) {
+                    if(costeVecino > costeMejor){
                         solMejor = Arrays.copyOf(vecinos[i], vecinos[i].length);
                         costeMejor = costeVecino;
                     }
@@ -69,16 +58,15 @@ public class SA_p1_1 {
             System.out.println("\nsolMejor tras la iteracion: " + Arrays.toString(solMejor) + "\n");
             temperatura *= 0.9;
         }
-        if (exitos == 0) {
-            System.out.println("\nSe termina el proceso de búsqueda por no haber mejores vecinos");
-        } else {
-            System.out.println("\nSe termina el proceso de búsqueda por enfriarse el proceso");
+        if(exitos == 0){
+            System.out.println("\nEl proceso termina por no haber mejores vecinos.");
+        }else{
+            System.out.println("\nEl proceso termina por enfriarse el proceso.");
         }
         return solMejor;
     }
 
-
-    private static int[] generarVecino(int[] solucion, int i, int j) {
+    private static int[] generarVecino(int[] solucion, int i, int j){
         int[] vecino = Arrays.copyOf(solucion, solucion.length);
         int temp = vecino[i];
         vecino[i] = vecino[j];
@@ -86,22 +74,22 @@ public class SA_p1_1 {
         return vecino;
     }
 
-    private static int[][] generarVecinos(int[] solucion) {
+    private static int[][] generarVecinos(int[] solucion){
         int[][] vecinos = new int[NUM_VECINOS][NUM_MATERIALES];
         int index = 0;
-        for (int i = 0; i < NUM_MATERIALES; i++) {
-            for (int j = i + 1; j < NUM_MATERIALES; j++) {
+        for(int i = 0; i < NUM_MATERIALES; i++){
+            for(int j = i + 1; j < NUM_MATERIALES; j++){
                 vecinos[index++] = generarVecino(solucion, i, j);
             }
         }
         return vecinos;
     }
 
-    private static double calcularCoste(int[] array) {
+    private static double calcularCoste(int[] array){
         return array[0] + array[1] + array[2];
     }
 
-    private static boolean probAceptacion(double delta, double temperatura) {
-        return (Math.exp(delta / temperatura) > Math.random());
+    private static boolean probAceptacion(double delta, double temperatura){
+        return (Math.exp(delta/temperatura) > Math.random());
     }
 }

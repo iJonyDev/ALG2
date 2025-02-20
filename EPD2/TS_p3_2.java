@@ -14,7 +14,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
-public class TS_p3_1 {
+public class TS_p3_2 {
     public static final int NUM_VECINOS = 10;
     public static final int NUM_COMPONENTES = 4;
     public static final int NUM_VALORES = 4;
@@ -26,17 +26,18 @@ public class TS_p3_1 {
         int[][] valores = generarMatrizAleatoria(NUM_COMPONENTES, NUM_VALORES);
         int[][] afinidades = generarMatrizAleatoria(NUM_COMPONENTES, NUM_VALORES);
         int[][] costes = calcularCostes(valores, afinidades);
-        int[] solucion = tabuSearch(valores, afinidades, costes);
-        System.out.println("\n\nLa mejor combinación encontrada es: " + Arrays.toString(solucion) + ", con afinidad total: " + calcularAfinidadTotal(solucion, afinidades) + " y coste total: " + calcularCosteTotal(solucion, costes));
+        int[] solucion = tabuSearch(afinidades, costes);
+        System.out.println("\n\nLa mejor combinación encontrada es: " + Arrays.toString(solucion) 
+                            + ", con afinidad total: " + calcularTotal(solucion, afinidades) 
+                            + " y coste total: " + calcularTotal(solucion, costes));
     }
 
-    private static int[] tabuSearch(int[][] valores, int[][] afinidades, int[][] costes) {
+    private static int[] tabuSearch(int[][] afinidades, int[][] costes) {
         int[] solActual = generarSolucionInicial();
-        while (calcularCosteTotal(solActual, costes) > UMBRAL_COSTE) solActual = generarSolucionInicial();
-        int[] solMejor = Arrays.copyOf(solActual, solActual.length);
-        double afinidadActual = calcularAfinidadTotal(solActual, afinidades), afinidadMejor = afinidadActual;
+        while (calcularTotal(solActual, costes) > UMBRAL_COSTE) solActual = generarSolucionInicial();
+        int[] solMejor = solActual;
+        double afinidadActual = calcularTotal(solActual, afinidades), afinidadMejor = afinidadActual;
         Queue<int[]> listaTabu = new LinkedList<>();
-        listaTabu.add(solActual);
         int iteraciones = 0;
 
         while (iteraciones++ < MAX_ITERACIONES) {
@@ -46,10 +47,10 @@ public class TS_p3_1 {
             double mejorAfinidadVecino = -1;
 
             for (int i = 0; i < vecinos.length; i++) {
-                double costeVecino = calcularCosteTotal(vecinos[i], costes);
-                double afinidadVecino = calcularAfinidadTotal(vecinos[i], afinidades);
+                double costeVecino = calcularTotal(vecinos[i], costes);
+                double afinidadVecino = calcularTotal(vecinos[i], afinidades);
                 System.out.println("\nVecino " + i + ", coste = " + costeVecino);
-                if (!listaTabu.contains(vecinos[i]) && afinidadVecino > mejorAfinidadVecino && costeVecino <= UMBRAL_COSTE) {
+                if (!listaTabu.contains(vecinos[i]) && afinidadVecino > mejorAfinidadVecino && costeVecino <= UMBRAL_COSTE ) {
                         mejorAfinidadVecino = afinidadVecino;
                         mejorVecino = vecinos[i];
                 }
@@ -101,18 +102,11 @@ public class TS_p3_1 {
         return matriz;
     }
 
-    private static double calcularAfinidadTotal(int[] solucion, int[][] afinidades) {
-        double afinidadTotal = 0;
+    private static double calcularTotal(int[] solucion, int[][] matriz) {
+        double total = 0;
         for (int i = 0; i < solucion.length; i++) 
-            afinidadTotal += afinidades[i][solucion[i]];
-        return afinidadTotal;
-    }
-
-    private static double calcularCosteTotal(int[] solucion, int[][] costes) {
-        double costeTotal = 0;
-        for (int i = 0; i < solucion.length; i++) 
-            costeTotal += costes[i][solucion[i]];
-        return costeTotal;
+            total += matriz[i][solucion[i]];
+        return total;
     }
 
     private static int[][] calcularCostes(int[][] valores, int[][] afinidades) {

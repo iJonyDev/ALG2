@@ -19,15 +19,17 @@ public class TS_p2_1 {
     public static final int TENENCIA_TABU = 5;
     public static final int MAX_ITERACIONES = 10;
 
-    private static final int[][] TIEMPOS = {
-        {2, 3, 1},
-        {4, 2, 3},
-        {3, 1, 2},
-        {5, 4, 3},
-        {2, 3, 4},
-        {3, 2, 1},
-        {4, 3, 2}
-    };
+
+    private static final int[][] TIEMPOS = new int[NUM_PROCESOS][NUM_PROCESADORES];
+
+    static {
+        Random rand = new Random();
+        for (int i = 0; i < NUM_PROCESOS; i++) {
+            for (int j = 0; j < NUM_PROCESADORES; j++) {
+                TIEMPOS[i][j] = rand.nextInt(10) + 1;
+            }
+        }
+    }
 
     public static void main(String[] args) {
         int[] solucion = tabuSearch();
@@ -35,52 +37,38 @@ public class TS_p2_1 {
     }
 
     private static int[] tabuSearch() {
-        int[] solActual = generarSolucionInicial();
-        int[] solMejor = Arrays.copyOf(solActual, solActual.length);
-        int[][] vecinos;
+        int[] solActual = generarSolucionInicial(), solMejor = solActual;
         Queue<int[]> listaTabu = new LinkedList<>();
-
-        double costeActual = calcularCoste(solActual);
-        double costeMejor = costeActual;
-        double costeVecino;
+        double costeActual = calcularCoste(solActual), costeMejor = costeActual;
         int iteraciones = 0;
-
-        while (iteraciones < MAX_ITERACIONES) {
+    
+        while (iteraciones++ < MAX_ITERACIONES) {
             System.out.println("\n\n************** Iteracion " + (iteraciones + 1));
-            vecinos = generarVecinos(solActual);
+            int[][] vecinos = generarVecinos(solActual);
             int[] mejorVecino = null;
             double mejorCosteVecino = Double.MAX_VALUE;
-
-            for (int i = 0; i < NUM_VECINOS; i++) {
-                System.out.println("\nVecino " + i + " generado: tiempo de finalización=" + calcularCoste(vecinos[i]));
-                if (!listaTabu.contains(vecinos[i])) {
-                    costeVecino = calcularCoste(vecinos[i]);
-                    if (costeVecino < mejorCosteVecino) {
-                        mejorVecino = vecinos[i];
-                        mejorCosteVecino = costeVecino;
-                    }
+    
+            for (int i = 0; i < vecinos.length; i++) {
+                double costeVecino = calcularCoste(vecinos[i]);
+                System.out.println("\nVecino "+ i +", tiempo de finalización=" + costeVecino);
+                if (!listaTabu.contains(vecinos[i]) && costeVecino < mejorCosteVecino) {
+                    mejorVecino = vecinos[i];
+                    mejorCosteVecino = costeVecino;
                 }
             }
-
+    
             if (mejorVecino != null) {
                 solActual = Arrays.copyOf(mejorVecino, mejorVecino.length);
                 costeActual = mejorCosteVecino;
-
                 if (costeActual < costeMejor) {
                     solMejor = Arrays.copyOf(solActual, solActual.length);
                     costeMejor = costeActual;
-                    System.out.println("\nSolucion mejor global actualizada en iteracion = " + (iteraciones + 1));
+                    System.out.println("\nSolucion mejor global actualizada en iteracion = " + iteraciones);
                 }
-
                 listaTabu.add(solActual);
-                if (listaTabu.size() > TENENCIA_TABU) {
-                    listaTabu.poll();
-                }
+                if (listaTabu.size() > TENENCIA_TABU) listaTabu.poll();
             }
-
-            iteraciones++;
         }
-
         return solMejor;
     }
 
@@ -93,9 +81,9 @@ public class TS_p2_1 {
         return solucion;
     }
 
-    private static int[] generarVecino(int[] solucion, int i, int j) {
+    private static int[] generarVecino(int[] solucion, int pos, int nuevoProcesador) {
         int[] vecino = Arrays.copyOf(solucion, solucion.length);
-        vecino[i] = j;
+        vecino[pos] = nuevoProcesador;
         return vecino;
     }
 
